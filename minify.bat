@@ -1,0 +1,1 @@
+terser GFetch.js -m --mangle-props regex=/^_/ -o GFetch.min.js 
