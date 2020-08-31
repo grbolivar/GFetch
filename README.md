@@ -4,10 +4,7 @@ Tiny wrapper over fetch() for easy HTTP requests with an OOP approach, small foo
 ## Usage
 
 ```js
-/*
-Can pass an Observer (optional) on instantiation to observe this api's requests. See below.
-*/
-let api = new GFetch("https://my-api/" /*, Observer */)
+let api = new GFetch("https://my-api/")
 
 /*
 Add endpoints/resource points. Every endpoint will be appended as a property of the object

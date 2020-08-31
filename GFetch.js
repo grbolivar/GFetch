@@ -1,10 +1,9 @@
 class GFetch {
 
-	constructor(url, observer) {
+	constructor(url) {
 
 		//normalize url so it ends with /
 		this.url = url.replace(/[\/]*$/, "/");
-		this.observer = observer;
 
 		this._endpoints = [];
 		this._headers = {};
@@ -38,8 +37,6 @@ class GFetch {
 			_this._endpoints = Array.from(new Set(_this._endpoints.concat(array))),
 
 			array.forEach(endpoint => {
-				//Avoid dupes
-				if (_this[endpoint]) return;
 
 				//Transform to camelCase
 				let camelCaseName = endpoint.toLowerCase().split(/\W/).map((e, i) =>
@@ -47,6 +44,7 @@ class GFetch {
 				).join("");
 
 				_this[camelCaseName] = new GFetchEndpoint(endpoint, _this);
+
 			}),
 
 			_this
@@ -59,6 +57,7 @@ class GFetch {
 
 
 class GFetchEndpoint {
+
 	constructor(name, gFetch) {
 		this.name = name;
 		this._api = gFetch;
