@@ -38,12 +38,14 @@ class GFetch {
 
 			array.forEach(endpoint => {
 
-				//Transform to camelCase
-				let camelCaseName = endpoint.toLowerCase().split(/\W/).map((e, i) =>
-					i == 0 ? e : e.charAt(0).toUpperCase() + e.slice(1)
-				).join("");
+				_this[
 
-				_this[camelCaseName] = new GFetchEndpoint(endpoint, _this);
+					//Transform to camelCase
+					endpoint.toLowerCase().split(/\W/).map((e, i) =>
+						i == 0 ? e : e.charAt(0).toUpperCase() + e.slice(1)
+					).join("")
+
+				] = new GFetchEndpoint(endpoint, _this);
 
 			}),
 
@@ -66,26 +68,26 @@ class GFetchEndpoint {
 
 	/** 
 	Allows for a more customizable request
-	@param {Object} fetchCnf fetch() config obj 
+	@param {Object} cnf fetch() config obj 
 	*/
-	fetch(fetchCnf) {
+	fetch(cnf) {
 
 		let
 			_this = this,
-			method = fetchCnf.method,
-			params = fetchCnf.params || "",
-			body = fetchCnf.body || null
+			method = cnf.method,
+			params = cnf.params || "",
+			body = cnf.body || null
 			;
 
 		//Notify observers
 		_this._notify(method, "SENT");
 
 		//Append API's global headers & overwrite them if provided here. DO NOT modify original! Make a copy
-		fetchCnf.headers = Object.assign(
+		cnf.headers = Object.assign(
 			//Auto-set request type
 			{ 'X-Requested-With': 'XMLHttpRequest' },
 			_this._api.headers(),
-			fetchCnf.headers || {}
+			cnf.headers || {}
 		);
 
 		//Params
@@ -97,13 +99,13 @@ class GFetchEndpoint {
 
 		//Body
 		if (body && typeof body == "object") {
-			fetchCnf.body = JSON.stringify(body);
-			fetchCnf.headers['Content-Type'] = 'application/json';
+			cnf.body = JSON.stringify(body);
+			cnf.headers['Content-Type'] = 'application/json';
 		}
 
 		//console.log(fetchCnf);
 
-		return fetch(_this._url + params, fetchCnf)
+		return fetch(_this._url + params, cnf)
 			.then(async r => (
 				_this._notify(method, "OK"),
 				//Auto-parse response's data
