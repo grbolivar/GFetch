@@ -1,4 +1,4 @@
-# GFetch v1.0.1
+# GFetch v1.1.0
 Tiny wrapper over fetch() for easy HTTP requests with an OOP approach, small footprint, observing capabilities and zero dependencies.
 
 ## Usage

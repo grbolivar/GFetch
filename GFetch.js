@@ -80,7 +80,8 @@ class GFetchEndpoint {
 			;
 
 		//Notify observers
-		_this._notify(method, "SENT");
+		//0 = Pending/request sent
+		_this._notify(method, 0);
 
 		//Append API's global headers & overwrite them if provided here. DO NOT modify original! Make a copy
 		cnf.headers = Object.assign(
@@ -107,13 +108,13 @@ class GFetchEndpoint {
 
 		return fetch(_this._url + params, cnf)
 			.then(async r => (
-				_this._notify(method, "OK"),
+				_this._notify(method, r.status || 200),
 				//Auto-parse response's data
 				r.data = await _this._parseResponseBody(r),
 				r
 			))
 			.catch(e => {
-				_this._notify(method, "FAIL");
+				_this._notify(method, 599); //network timeout error
 				throw e
 			})
 			;
