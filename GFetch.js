@@ -57,6 +57,22 @@ class GFetch {
 
 
 
+class GFetchError extends Error {
+
+	constructor(fetchResponse, ...params) {
+		super(...params)
+		this.status = fetchResponse.status;
+		this.statusText = fetchResponse.statusText;
+	}
+
+	toString() {
+		return this.statusText;
+	}
+
+}
+
+
+
 
 class GFetchEndpoint {
 
@@ -107,14 +123,23 @@ class GFetchEndpoint {
 		//console.log(fetchCnf);
 
 		return fetch(_this._url + params, cnf)
-			.then(async r => (
-				_this._notify(method, r.status || 200),
+			.then(async r => {
+
+				//Normalize non-ok responses as exceptions
+				if (!r.ok) {
+					throw new GFetchError(r)
+				}
+
+				_this._notify(method, r.status || 200);
+
 				//Auto-parse response's data
-				r.data = await _this._parseResponseBody(r),
-				r
-			))
+				r.data = await _this._parseResponseBody(r);
+
+				return r
+			})
 			.catch(e => {
-				_this._notify(method, 599); //network timeout error
+				//599 = network timeout error
+				_this._notify(method, e.status || 599);
 				throw e
 			})
 			;
