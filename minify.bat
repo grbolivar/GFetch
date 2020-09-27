@@ -1,1 +1,1 @@
-terser GFetch.js -m --mangle-props regex=/^_/ -o GFetch.min.js 
+terser GFetch.js -m --mangle-props regex=/^_/ -c drop_console -o GFetch.min.js 

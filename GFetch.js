@@ -10,23 +10,23 @@ class GFetch {
 	}
 
 	headers(map) {
-		let _this = this;
+		let headers = this._headers;
 		return map ? (
 
 			Object.entries(
 
 				//Copy-overwrite headers
-				Object.assign(_this._headers, map)
+				Object.assign(headers, map)
 
 			)
 
 				//remove NULL or undefined headers
 				.forEach(([key, value]) =>
-					value == undefined || value == null ? delete _this._headers[key] : 1
+					value == undefined || value == null ? delete headers[key] : 1
 				),
 
-			_this
-		) : _this._headers;
+			this
+		) : headers;
 	}
 
 	endpoints(array) {
@@ -63,6 +63,7 @@ class GFetchError extends Error {
 		super(...params)
 		this.status = fetchResponse.status;
 		this.statusText = fetchResponse.statusText;
+		this.response = fetchResponse;
 	}
 
 	toString() {
@@ -99,13 +100,12 @@ class GFetchEndpoint {
 		//0 = Pending/request sent
 		_this._notify(method, 0);
 
-		//Append API's global headers & overwrite them if provided here. DO NOT modify original! Make a copy
-		cnf.headers = Object.assign(
-			//Auto-set request type
-			{ 'X-Requested-With': 'XMLHttpRequest' },
-			_this._api.headers(),
-			cnf.headers || {}
-		);
+		//Headers. Global API headers will be overwritten with requests headers
+		cnf.headers = {
+			..._this._api.headers(),
+			...(cnf.headers || {}),
+			'X-Requested-With': 'XMLHttpRequest',
+		};
 
 		//Params
 		if (params && typeof params == 'object') {
@@ -114,18 +114,18 @@ class GFetchEndpoint {
 				.join('&')
 		}
 
-		//Body
+		//JSON Body
 		if (body && typeof body == "object") {
 			cnf.body = JSON.stringify(body);
 			cnf.headers['Content-Type'] = 'application/json';
 		}
 
-		//console.log(fetchCnf);
+		console.log(JSON.stringify(cnf, null, 4));
 
 		return fetch(_this._url + params, cnf)
 			.then(async r => {
 
-				//Normalize non-ok responses as exceptions
+				//Normalize non-ok responses as exceptions a la axios
 				if (!r.ok) {
 					throw new GFetchError(r)
 				}
@@ -217,7 +217,7 @@ class GFetchEndpoint {
 			try {
 				data = await r.clone().text();
 			} catch (e) {
-				//console.log(e);
+				console.log(e);
 			}
 		}
 		return data;
