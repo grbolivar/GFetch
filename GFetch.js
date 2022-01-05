@@ -10,22 +10,26 @@ class GFetch {
 	}
 
 	headers(map) {
-		let headers = this._headers;
+		let
+			headers = this._headers,
+			_Object = Object
+			;
 		return map ? (
 
-			Object.entries(
+			_Object.entries(
 
 				//Copy-overwrite headers
-				Object.assign(headers, map)
+				_Object.assign(headers, map)
 
 			)
 
 				//remove NULL or undefined headers
 				.forEach(([key, value]) =>
-					value == undefined || value == null ? delete headers[key] : 1
+					value === undefined || value === null ? delete headers[key] : 1
 				),
 
 			this
+
 		) : headers;
 	}
 
@@ -34,7 +38,7 @@ class GFetch {
 		return array ? (
 
 			//concat and remove dupes
-			_this._endpoints = Array.from(new Set(_this._endpoints.concat(array))),
+			_this._endpoints = [...new Set(_this._endpoints.concat(array))],
 
 			array.forEach(endpoint => {
 
@@ -56,7 +60,6 @@ class GFetch {
 
 
 
-
 class GFetchError extends Error {
 
 	constructor(fetchResponse, ...params) {
@@ -71,7 +74,6 @@ class GFetchError extends Error {
 	}
 
 }
-
 
 
 
@@ -92,8 +94,9 @@ class GFetchEndpoint {
 		let
 			_this = this,
 			method = cnf.method,
+			route = cnf.route || "",
 			params = cnf.params || "",
-			body = cnf.body || null
+			body = cnf.body
 			;
 
 		//Notify observers
@@ -103,26 +106,31 @@ class GFetchEndpoint {
 		//Headers. Global API headers will be overwritten with requests headers
 		cnf.headers = {
 			..._this._api.headers(),
-			...(cnf.headers || {}),
+			...cnf.headers,
 			'X-Requested-With': 'XMLHttpRequest',
 		};
 
 		//Params
-		if (params && typeof params == 'object') {
+		if (typeof params == 'object') {
 			params = '?' + Object.entries(params)
-				.map(([key, val]) => key + "=" + val)
+				//Filter out empty values
+				.filter(([key, val]) => val != null && val !== "")
+				.map(([key, val]) => (
+					//Query-to-mongo support for query operators
+					key.match(/[=><!]\s*$/) ? key : (key + "=")
+				) + val)
 				.join('&')
 		}
 
 		//JSON Body
-		if (body && typeof body == "object") {
+		if (typeof body == "object") {
 			cnf.body = JSON.stringify(body);
 			cnf.headers['Content-Type'] = 'application/json';
 		}
 
 		console.log(JSON.stringify(cnf, null, 4));
 
-		return fetch(_this._url + params, cnf)
+		return fetch(_this._url + route + params, cnf)
 			.then(async r => {
 
 				//Normalize non-ok responses as exceptions a la axios
@@ -138,8 +146,10 @@ class GFetchEndpoint {
 				return r
 			})
 			.catch(e => {
+				console.log("fetch error: " + JSON.stringify(e));
 				//599 = network timeout error
 				_this._notify(method, e.status || 599);
+				//Propagate exception
 				throw e
 			})
 			;
@@ -149,8 +159,8 @@ class GFetchEndpoint {
 	Performs a GET request
 	@param {String|Object} params
 	*/
-	get(params) {
-		return this._requestWithParams("GET", params);
+	get(paramsOrRoute, params) {
+		return this._requestWithParams("GET", paramsOrRoute, params);
 	}
 
 	/** 
@@ -184,12 +194,16 @@ class GFetchEndpoint {
 	Performs a DELETE request
 	@param {String|Object} params
 	*/
-	delete(params) {
-		return this._requestWithParams("DELETE", params);
+	delete(paramsOrRoute, params) {
+		return this._requestWithParams("DELETE", paramsOrRoute, params);
 	}
 
-	_requestWithParams(method, params) {
-		return this.fetch({ method, params });
+	_requestWithParams(method, route, params) {
+		if (typeof route == 'object') {
+			params = route
+			route = null
+		}
+		return this.fetch({ method, route, params });
 	}
 
 	_requestWithParamsAndBody(method, params, body) {
@@ -209,6 +223,7 @@ class GFetchEndpoint {
 		});
 	}
 
+	//Try to parse JSON first, then text
 	async _parseResponseBody(r) {
 		let data = null;
 		try {
