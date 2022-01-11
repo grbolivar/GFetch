@@ -96,7 +96,8 @@ class GFetchEndpoint {
 			method = cnf.method,
 			route = cnf.route || "",
 			params = cnf.params || "",
-			body = cnf.body
+			body = cnf.body,
+			bodyType = cnf.bodyType || "json"
 			;
 
 		//Notify observers
@@ -122,10 +123,12 @@ class GFetchEndpoint {
 				.join('&')
 		}
 
-		//JSON Body
-		if (typeof body == "object") {
+		//Automatic JSON Body
+		if (typeof body == "object" && bodyType == "json") {
 			cnf.body = JSON.stringify(body);
 			cnf.headers['Content-Type'] = 'application/json';
+		} else {
+			cnf.body = body
 		}
 
 		console.log(JSON.stringify(cnf, null, 4));
