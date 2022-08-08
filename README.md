@@ -82,12 +82,31 @@ api.users.fetch({
 		name: "Greg",
 		age: 25,
 	},
+	//Data type of the body beign sent, defaults to 'json'. Can be used e.g. to send 'FormData' in the body.
+	bodyType: 'json',
 	//Appends this as query string parameters to the URL
 	params: {
 		foo: "bar",
 		abc: 1,
 	}
 }).then(({data}) => ...).catch( error => ... );
+
+/*
+Send FormData. Results in this request:
+POST https://my-api/users/12345/avatar
+*/
+let uid = "12345"; //User ID
+let formData = new FormData();
+formData.append('file', pictureFile);
+
+api.users.fetch({
+	method: "post",
+	//Appends extra route at the end of the API's URL
+	route: `${uid}/avatar`,
+	//Body's data type being sent (defaults to 'json')
+	bodyType: "FormData",
+	body: formData,
+}).then(({data}) => ...);
 
 /*
 Session ends. From now on, no Authorization header will be sent.
@@ -98,14 +117,14 @@ api.headers({"Authorization": null})
 
 ## Observing
 
-To observe your api's state, simply add a function. You can use this to react to the api's requests, eg., show a "busy/loading" indicator on your UI.
+Observe your API's state by adding a function. You can use this to react to the API's requests, eg., show a "busy/loading" indicator on your UI.
 
 ```js
 api.observer = message => {
-	console.log('API Observer: message notified', message);
+	console.log('API Observer:', message);
 };
 
-//Stop observation by simply setting null
+//Stop observation
 api.observer = null;
 ```
 
